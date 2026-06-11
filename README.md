@@ -1,58 +1,65 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Docker setup
 
-## About Laravel
+This project is configured to run with Docker using PHP-FPM, Nginx, MySQL, Redis, and phpMyAdmin.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Run locally with Docker
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. Open a terminal in the project root.
+2. Start containers:
+   ```bash
+   docker compose up --build -d
+   ```
+3. Generate the application key and run migrations:
+   ```bash
+   docker compose exec app php artisan migrate --force
+   ```
+4. Run project-specific artisan commands from the app container, for example:
+   ```bash
+   docker compose exec app php artisan telegram:compare-posts
+   ```
+5. If you need to regenerate the key:
+   ```bash
+   docker compose exec app php artisan key:generate --force
+   ```
+6. Open the app in your browser:
+    - App: `http://localhost:8080`
+    - phpMyAdmin: `http://localhost:8081`
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Docker service notes
 
-## Learning Laravel
+- `app` runs PHP 8.2 FPM
+- `nginx` serves `public/`
+- `mysql` stores the database
+- `redis` runs Redis
+- `phpmyadmin` provides database UI
+- `node` builds frontend assets with `npm run build`
+- Telegram session files are stored in `storage/telegram_auth_session.madeline` inside the Docker storage volume
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Database credentials
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Host: `mysql`
+- Port: `3306`
+- Database: `laravel`
+- User: `laravel`
+- Password: `secret`
+- phpMyAdmin: `http://localhost:8081`
+- phpMyAdmin login: `root` / `rootpassword`
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+> Important: do not run `php artisan` directly from your Windows host shell while `DB_HOST=mysql` is set. That host name only resolves inside Docker. Use `docker compose exec app php artisan ...` for all Laravel commands that use the database.
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+docker compose exec app bash
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Shut down
 
-## Contributing
+```bash
+docker compose down -v
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Remote database with docker
+```bash
+docker compose exec app sh -c 'export DB_CONNECTION=mysql_remote && php artisan telegram:compare-posts 2026-06-05'
+```
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
